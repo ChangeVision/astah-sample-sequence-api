@@ -2,8 +2,10 @@ import java.io.InputStream;
 
 import com.change_vision.jude.api.inf.AstahAPI;
 import com.change_vision.jude.api.inf.model.IClass;
+import com.change_vision.jude.api.inf.model.ICombinedFragment;
 import com.change_vision.jude.api.inf.model.IGate;
 import com.change_vision.jude.api.inf.model.IInteraction;
+import com.change_vision.jude.api.inf.model.IInteractionOperand;
 import com.change_vision.jude.api.inf.model.ILifeline;
 import com.change_vision.jude.api.inf.model.IMessage;
 import com.change_vision.jude.api.inf.model.INamedElement;
@@ -11,9 +13,8 @@ import com.change_vision.jude.api.inf.model.ISequenceDiagram;
 import com.change_vision.jude.api.inf.project.ModelFinder;
 import com.change_vision.jude.api.inf.project.ProjectAccessor;
 
-
 public class SampleSequence {
-	
+
 	public static void main(String[] args) throws Exception {
 		AstahAPI api = AstahAPI.getAstahAPI();
 		ProjectAccessor projectAccessor = api.getProjectAccessor();
@@ -37,33 +38,36 @@ public class SampleSequence {
 
 	/**
 	 * サンプルモデルを開きます。
+	 * 
 	 * @param projectAccessor
 	 * @throws Exception
 	 */
 	private static void openSampleModel(ProjectAccessor projectAccessor)
 			throws Exception {
-		InputStream astahFileStream = SampleSequence.class.getResourceAsStream("Sample.asta");
+		InputStream astahFileStream = SampleSequence.class
+				.getResourceAsStream("Sample.asta");
 		projectAccessor.open(astahFileStream);
 	}
 
 	/**
 	 * Sequence Diagramという名前の要素を取得します。
+	 * 
 	 * @param projectAccessor
 	 * @return 発見したモデル
 	 * @throws Exception
 	 */
-	private static INamedElement[] findSequence(
-			ProjectAccessor projectAccessor) throws Exception {
-		INamedElement[] foundElements = projectAccessor.findElements(new ModelFinder() {
-			public boolean isTarget(INamedElement namedElement) {
-				return namedElement.getName().equals("Sequence Diagram");
-			}
-		});
+	private static INamedElement[] findSequence(ProjectAccessor projectAccessor)
+			throws Exception {
+		INamedElement[] foundElements = projectAccessor
+				.findElements(new ModelFinder() {
+					public boolean isTarget(INamedElement namedElement) {
+						return namedElement instanceof ISequenceDiagram;
+					}
+				});
 		return foundElements;
 	}
 
-	private static ISequenceDiagram castSequence(
-			INamedElement element) {
+	private static ISequenceDiagram castSequence(INamedElement element) {
 		ISequenceDiagram sequenceDiagram = null;
 		if (element instanceof ISequenceDiagram) {
 			sequenceDiagram = (ISequenceDiagram) element;
@@ -73,6 +77,7 @@ public class SampleSequence {
 
 	/**
 	 * 相互作用(IInteraction)を表示します。
+	 * 
 	 * @param interaction
 	 * @see http://members.change-vision.com/javadoc/astah-api/6_7_0-43495/api/ja/doc/javadoc/com/change_vision/jude/api/inf/model/IInteraction.html
 	 */
@@ -95,11 +100,12 @@ public class SampleSequence {
 			showGate(gate);
 		}
 		System.out.println("Gate end.");
-		
+
 	}
 
 	/**
 	 * ゲートを表示します。
+	 * 
 	 * @param gate
 	 * @see http://members.change-vision.com/javadoc/astah-api/6_7_0-43495/api/ja/doc/javadoc/com/change_vision/jude/api/inf/model/IGate.html
 	 */
@@ -112,7 +118,8 @@ public class SampleSequence {
 		ILifeline[] lifelines = interaction.getLifelines();
 		boolean first = true;
 		for (ILifeline lifeline : lifelines) {
-			if (!first) showMiniSeparator();
+			if (!first)
+				showMiniSeparator();
 			showLifeline(lifeline);
 			first = false;
 		}
@@ -121,6 +128,7 @@ public class SampleSequence {
 
 	/**
 	 * ライフラインを表示します。
+	 * 
 	 * @param lifeline
 	 * @see http://members.change-vision.com/javadoc/astah-api/6_7_0-43495/api/ja/doc/javadoc/com/change_vision/jude/api/inf/model/ILifeline.html
 	 */
@@ -142,10 +150,40 @@ public class SampleSequence {
 		System.out.println("Fragment start.");
 		INamedElement[] fragments = lifeline.getFragments();
 		for (INamedElement fragment : fragments) {
+			if (fragment instanceof ICombinedFragment) {
+				ICombinedFragment combinedFragment = (ICombinedFragment) fragment;
+				showMiniSeparator();
+				showCombinedFragment(combinedFragment);
+				showMiniSeparator();
+				continue;
+			}
 			System.out.println(fragment);
 		}
 		System.out.println("Fragment end.");
 		showMiniSeparator();
+	}
+
+	/**
+	 * 複合フラグメントを表示する。
+	 * 
+	 * @param combinedFragment
+	 * @see http://members.change-vision.com/javadoc/astah-api/6_7_0-43495/api/ja/doc/javadoc/com/change_vision/jude/api/inf/model/ICombinedFragment.html
+	 */
+	private static void showCombinedFragment(ICombinedFragment combinedFragment) {
+		System.out.println("CombinedFragment");
+		System.out.println("isAlt() : " + combinedFragment.isAlt());
+		System.out.println("isAssert() : " + combinedFragment.isAssert());
+		System.out.println("isBreak() : " + combinedFragment.isBreak());
+		System.out.println("isConsider() : " + combinedFragment.isConsider());
+		System.out.println("isCritical() : " + combinedFragment.isCritical());
+		System.out.println("isIgnore() : " + combinedFragment.isIgnore());
+		System.out.println("isLoop() : " + combinedFragment.isLoop());
+		System.out.println("isNeg() : " + combinedFragment.isNeg());
+		System.out.println("isOpt() : " + combinedFragment.isOpt());
+		IInteractionOperand[] interactionOperands = combinedFragment.getInteractionOperands();
+		for (IInteractionOperand interactionOperand : interactionOperands) {
+			System.out.println("interaction operand guard : '" + interactionOperand.getGuard() + "'");
+		}
 	}
 
 	private static void showMessages(IInteraction interaction) {
@@ -153,16 +191,19 @@ public class SampleSequence {
 		IMessage[] messages = interaction.getMessages();
 		boolean first = true;
 		for (IMessage message : messages) {
-			if (!first) showMiniSeparator();
+			if (!first)
+				showMiniSeparator();
 			showMessage(message);
 			first = false;
 		}
 		showMiniSeparator();
 		System.out.println("Message end.");
+
 	}
 
 	/**
 	 * メッセージを表示します。
+	 * 
 	 * @param message
 	 * @see http://members.change-vision.com/javadoc/astah-api/6_7_0-43495/api/ja/doc/javadoc/com/change_vision/jude/api/inf/model/IMessage.html
 	 */
@@ -172,6 +213,8 @@ public class SampleSequence {
 		System.out.println("source : " + source);
 		INamedElement target = message.getTarget();
 		System.out.println("target : " + target);
+		String guard = message.getGuard();
+		System.out.println("guard : " + guard);
 	}
 
 	private static void showMiniSeparator() {
