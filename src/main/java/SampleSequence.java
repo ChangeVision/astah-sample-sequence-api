@@ -1,6 +1,9 @@
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.io.InputStream;
 
 import com.change_vision.jude.api.inf.AstahAPI;
+import com.change_vision.jude.api.inf.exception.InvalidUsingException;
 import com.change_vision.jude.api.inf.model.IClass;
 import com.change_vision.jude.api.inf.model.ICombinedFragment;
 import com.change_vision.jude.api.inf.model.IGate;
@@ -10,6 +13,9 @@ import com.change_vision.jude.api.inf.model.ILifeline;
 import com.change_vision.jude.api.inf.model.IMessage;
 import com.change_vision.jude.api.inf.model.INamedElement;
 import com.change_vision.jude.api.inf.model.ISequenceDiagram;
+import com.change_vision.jude.api.inf.presentation.ILinkPresentation;
+import com.change_vision.jude.api.inf.presentation.INodePresentation;
+import com.change_vision.jude.api.inf.presentation.IPresentation;
 import com.change_vision.jude.api.inf.project.ModelFinder;
 import com.change_vision.jude.api.inf.project.ProjectAccessor;
 
@@ -28,6 +34,7 @@ public class SampleSequence {
 				}
 				IInteraction interaction = sequence.getInteraction();
 				showInteraction(interaction);
+				showIncludeMessagesInCombinedFragment(sequence);
 			}
 		} catch (Exception e) {
 			throw e;
@@ -61,7 +68,7 @@ public class SampleSequence {
 		INamedElement[] foundElements = projectAccessor
 				.findElements(new ModelFinder() {
 					public boolean isTarget(INamedElement namedElement) {
-						return namedElement instanceof ISequenceDiagram;
+						return namedElement instanceof ISequenceDiagram && namedElement.getName().equals("example");
 					}
 				});
 		return foundElements;
@@ -82,7 +89,7 @@ public class SampleSequence {
 	 * @see http://members.change-vision.com/javadoc/astah-api/6_7_0-43495/api/ja/doc/javadoc/com/change_vision/jude/api/inf/model/IInteraction.html
 	 */
 	private static void showInteraction(IInteraction interaction) {
-		System.out.println("start ");
+		System.out.println("start interaction");
 		showSeparator();
 		showGates(interaction);
 		showSeparator();
@@ -215,6 +222,54 @@ public class SampleSequence {
 		System.out.println("target : " + target);
 		String guard = message.getGuard();
 		System.out.println("guard : " + guard);
+	}
+
+	private static void showIncludeMessagesInCombinedFragment(
+			ISequenceDiagram sequence) throws InvalidUsingException {
+		showSeparator();
+		System.out.println("start show incluceMessages in combined fragment");
+		showMiniSeparator();
+		IPresentation[] presentations = sequence.getPresentations();
+		INodePresentation combinedFragmentPresentation = getCombinedFragmentPresentation(presentations);
+		if (combinedFragmentPresentation != null) {
+			showIncludeMessages(presentations,combinedFragmentPresentation);
+		}
+	}
+
+	private static void showIncludeMessages(IPresentation[] presentations,
+			INodePresentation combinedFragmentPresentation) {
+		Rectangle2D combinedFragmentRectangle = combinedFragmentPresentation.getRectangle();
+		for (IPresentation presentation : presentations) {
+			if (isMessagePresentation(presentation)) {
+				ILinkPresentation messagePresentation = (ILinkPresentation) presentation;
+				Point2D[] messagePoints = messagePresentation.getPoints();
+				if(containsTheMessage(combinedFragmentRectangle, messagePoints)){
+					System.out.println("includes message : " + messagePresentation.getLabel());
+				}
+			}
+		}
+	}
+
+	private static boolean containsTheMessage(
+			Rectangle2D combinedFragmentRectangle, Point2D[] messagePoints) {
+		return combinedFragmentRectangle.contains(messagePoints[0]) && combinedFragmentRectangle.contains(messagePoints[1]);
+	}
+
+	private static boolean isMessagePresentation(IPresentation presentation) {
+		return presentation.getType().equals("Message") && presentation instanceof ILinkPresentation;
+	}
+
+	private static INodePresentation getCombinedFragmentPresentation(
+			IPresentation[] presentations) {
+		INodePresentation combinedFragmentPresentation = null;
+		for (IPresentation presentation : presentations) {
+			if (presentation.getType().equals("CombinedFragment")) {
+				if (presentation instanceof INodePresentation) {
+					combinedFragmentPresentation = (INodePresentation) presentation;
+				}
+			}
+		}
+		return combinedFragmentPresentation;
 	}
 
 	private static void showMiniSeparator() {
