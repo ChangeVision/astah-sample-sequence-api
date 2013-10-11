@@ -13,6 +13,7 @@ import com.change_vision.jude.api.inf.model.ILifeline;
 import com.change_vision.jude.api.inf.model.IMessage;
 import com.change_vision.jude.api.inf.model.INamedElement;
 import com.change_vision.jude.api.inf.model.ISequenceDiagram;
+import com.change_vision.jude.api.inf.model.IStateInvariant;
 import com.change_vision.jude.api.inf.presentation.ILinkPresentation;
 import com.change_vision.jude.api.inf.presentation.INodePresentation;
 import com.change_vision.jude.api.inf.presentation.IPresentation;
@@ -162,6 +163,10 @@ public class SampleSequence {
 				showMiniSeparator();
 				showCombinedFragment(combinedFragment);
 				showMiniSeparator();
+				continue;
+			}
+			if (fragment instanceof IStateInvariant) {
+				System.out.println("StateInvariant : " + fragment);
 				continue;
 			}
 			System.out.println(fragment);
